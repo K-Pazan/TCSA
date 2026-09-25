@@ -1,0 +1,96 @@
+---
+title: "Supplementary information 1: Statistics"
+author: "Dusseldorp, G.L., Rutten, M., Pazan, K., Roussel, M., & Aleo, A."
+date: "2026-09-25"
+output: html_document
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+TCSA_data <- readRDS("TCSA_data.rds")
+TCSA_clean <- readRDS("TCSA_clean.rds")
+library("car")
+library("emmeans")
+library("lmtest")
+library("lmPerm")
+library("rcompanion")
+library("coin")
+
+```
+
+## Information
+
+This is an R Markdown document containing the code and statistical procedures used in the paper "Non-linear relationship between TCSA of transversally hafted arrows and penetration effectivity depends on the design of the entire projectile", submitted to *Journal of Archaeological Science: Reports.* To run this file, you will need to download the data. It is available below in both rds and csv formats.
+
+[TCSA_data rds](TCSA_data.rds)\
+[TCSA_data csv](TCSA_data.csv)\
+[TCSA_clean rds](TCSA_clean.rds)\
+[TCSA_clean csv](TCSA_clean.csv)
+
+You will also need to have the following packages downloaded in R: car [@car], emmeans [@emmeans], lmtest [@lmtest-2], lmPerm [@lmPerm], rcompanion [@rcompanion], coin [@coin]. Data are also available on [github](https://github.com/K-Pazan/TCSA). Any questions on the statistical methods in this paper can be directed to K.Pazan and G.L. Dusseldorp.
+
+## 1. Two-way factorial ANOVA
+
+Because we were only interested in the effects of arrow type after controlling for target, and not the effects of the target after controlling for arrow type, it would have been possible to fit a linear model listing “Target” before “Arrow” and then conduct Type I ANOVA, which is sensitive to the order of terms listed in the model. However, our data are unbalanced, and there are empty cells for certain combinations of factors. For example, the large arrow was not tested on the first target, meaning that the factor combination of ‘large arrow X target 1’ was not tested. This makes Type II or III ANOVA a more appropriate choice. Type II ANOVA is typically more powerful, but requires ruling out potential interactions between model terms [@shaw1993; @smith2021]. We thus performed a two-way factorial ANOVA to explore whether this assumption was met by our data. Our results indicated that there was no significant interaction between variables Target and Arrow, and thus that this core assumption of Type II ANOVA was met.
+
+```{r anova, echo=TRUE}
+factorial_anova <- aov(Depth~Target*Arrow, data=TCSA_data)
+summary(factorial_anova)
+```
+
+## 2. Additive model
+
+### 2.1 Additive ANOVA
+
+Because the interaction term (Target x Arrow) in the first factorial model was insignificant, we built an additive linear model and performed Type II ANOVA. Type II ANOVA tests for the effects of each factor after controlling for the other, assuming there is no interaction between them. Both model terms are significant at the \<.01 level, indicating that there are statistically significant differences in penetration depth between arrow types, when controlling for the effects of the target.
+
+```{r additive, echo=TRUE}
+
+TCSA_noninteract <- lm(Depth~Target+Arrow, data = TCSA_data)
+Anova(TCSA_noninteract, type="II")
+```
+
+### 2.2 Pairwise comparisons
+
+We then completed pairwise comparisons between the different arrow types using the estimated marginal means (EMM) for each arrow type, or mean penetration depths corrected for the differences between targets [@emmeans]. The medium arrow had the greatest EMM of 28.8 cm. The differences in mean penetration depth are significant when comparing the medium vs. small arrow and the medium vs. large arrow at the p\<=.011 level. The difference in mean penetration depth of the large vs. small arrow is not statistically significant.
+
+```{r pairwise, echo=TRUE}
+emmeans(TCSA_noninteract, pairwise ~ Arrow)
+```
+
+## 3. Tests of model assumptions
+
+ANOVA assumes a normal distribution and normal homogeneity of variance [@bakker2026]. We conducted Levene’s Test to test for the latter [@carlson2017], and examined the diagnostic plots to assess normality. The residuals show minor deviations from normality (especially at the tails), suggesting that the assumptions of the linear model were adequately met.
+
+### 3.1 Levene's test
+
+```{r levene, echo=TRUE}
+leveneTest(Depth ~ Arrow, data = TCSA_data)
+```
+
+### 3.2 ANOVA diagnostic plots
+
+```{r diagnostics, echo=FALSE}
+par(mfrow=c(2,2))
+plot(TCSA_noninteract)
+```
+
+## 4. Elimination of outliers and permutation model
+
+To investigate whether the slight deviations from normality detected in section 3.2 were influencing results, we eliminated the outliers identified in the plots (6, 19, 40) and three additional shots that were identified as potentially problematic during the experiment. While Kruskal-Wallis tests are often seen as the nonparametric equivalent of ANOVA, they handle interaction terms and unbalanced designs poorly, and cannot handle designs with multiple factors (like Target and Arrow). Permutation ANOVA overcomes these limitations and accommodates small sample sizes while still allowing for deviations from normality and homoscedasticity [@frossard2021]. We performed a permutation ANOVA (sequential, testing Target before Arrow), using the package lmPerm [@lmPerm], and then performed posthoc comparisons using rcompanion [@rcompanion]. The permutation ANOVA produced the same conclusions as the parametric ANOVA: the medium arrow penetrated more deeply than either the small or large arrow, after controlling for the target. No differences were detected between the performance of the small and large arrows.
+
+### 4.1 Permutation ANOVA
+
+```{r perm, echo=TRUE}
+set.seed(123)
+TCSA_perm <- aovp(Depth~Target+Arrow, data=TCSA_clean, seqs=TRUE)
+summary(TCSA_perm)
+```
+
+### 4.2 Permutation pairwise comparisons
+
+```{r posthoc, echo=TRUE}
+posthoc_perm <- pairwisePermutationTest(Depth~Arrow | Target, data=TCSA_clean,  method="fdr")
+posthoc_perm
+```
