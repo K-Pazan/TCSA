@@ -1,0 +1,176 @@
+---
+title: "Supplementary information 2: Statistics"
+author: "Dusseldorp, G.L., Rutten, M., Pazan, K., Roussel, M., & Aleo, A."
+date: "2026-09-25"
+output: html_document
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+TCSA_data <- readRDS("TCSA_data.rds")
+```
+
+## Information
+
+This is an R Markdown document containing the code and statistical procedures used in the paper "Relationship between TCSA of transversally hafted arrows and penetration effectiveness depends on the design of the entire projectile", submitted to *Journal of Archaeological Science: Reports.* To run this file, which can be downloaded on [github](https://github.com/K-Pazan/TCSA), you will also need to download the data. It is available below in both rds and csv formats.
+
+[TCSA_data rds](TCSA_data.rds).
+
+[TCSA_data csv](TCSA_data.csv)
+
+You will need to have the following packages downloaded in R: tidyverse [@tidyverse], car [@car-2], performance [@performance], emmeans [@emmeans], lme4 [@lme4], lmerTest [@lmerTest], glmmTMB [@glmmTMB], and DHARMa [@DHARMa]. Any questions on the statistical methods in this paper can be directed to K.Pazan and G.L. Dusseldorp.
+
+## 0. Data preparation
+
+First, eliminate cases without measurements for penetration depth. This leaves 73 shots in the complete dataset.
+
+```{r clean, echo=TRUE, message=FALSE}
+library(tidyverse)
+TCSA_order <- TCSA_data %>%
+  filter(Depth != "NA")
+table(TCSA_order$Depth=="NA")
+```
+
+## 1. Linear mixed-effects model
+
+### 1.1 Building the model
+
+Because we wanted to test the significance of TCSA on penetration depth while controlling for differences between targets, we fitted a linear mixed effects model (LMM) using `Arrow` as a fixed effect and `Target` as a random effect (blocking factor), following the procedures in @mangiafico2025 and using the REML criterion as recommended by @denis2020. In this experimental design, `Target` is considered a random effect because the differences between targets 1-4 (which include immeasurable differences in density, temperature, etc.) cannot be precisely replicated in future experiments [@newman1997], and we are only interested in the differences between specific arrows, not specific targets. LMMs created using `lmer()` are relatively robust to unbalanced experimental designs like ours, which has different numbers of shots per target and arrow, and thus a better choice than a traditional linear model created using lm() or aov() [@mangiafico2025]. We tested the significance of our model's terms using the `Anova()` function, which conducted Analysis of Deviance using a Type III Wald's Chi-Square Test. In the model, the fixed effects (`Arrow`) were significant.
+
+```{r anova, echo=TRUE, message=FALSE}
+library(car)
+library(lme4)
+library(lmerTest)
+TCSA_order$Target <- as.factor(TCSA_order$Target)
+TCSA_order$Arrow <- as.factor(TCSA_order$Arrow)
+block_model <- lmer(Depth ~ Arrow + (1|Target), data=TCSA_order, REML = TRUE)
+Anova(block_model, type = "III")
+```
+
+### 1.2 Tests of model assumptions
+
+Before extracting pairwise comparisons and evaluating our model's accuracy, we checked whether our model violated any assumptions. We conducted a Shapiro-Wilk test to check for normally distributed residuals and a Levene’s Test to check that residual variances did not differ significantly between arrow types. There was no evidence that the residual distribution diverged from normality (Shapiro-Wilk test, p = .140), but the assumption of homoscedasticity was violated (Levene's test, p \<.05), indicating differences in residual dispersion between arrow types.
+
+```{r levene, echo=TRUE, message=FALSE}
+library(car)
+TCSA_order$residuals <- residuals(block_model)
+leveneTest(residuals ~ Arrow, data = TCSA_order)
+shapiro.test(residuals(block_model))
+```
+We also visualized diagnostic plots using `check_model()` in the package *performance* [@performance]. The plots also indicated issues with model fit, especially a departure from homogeneity of variance and the effects of several influential observations.
+
+```{r block check, fig.height=10, fig.width=10, fig.align="center", echo=FALSE, message=FALSE}
+library(performance)
+check_model(block_model)
+```
+
+### 1.3 Accounting for residual dispersion
+
+We fitted another model using the glmmTMB() function in the package *glmmTMB* [@glmmTMB], which includes an argument `dispformula` that can model differences in residual dispersion between treatment groups (in this case, arrow types). We tested the significance of the fixed effects, and found that arrow type was significant.
+
+```{r var, echo=TRUE, message=FALSE}
+library(glmmTMB)
+library(DHARMa)
+arrow_model <- glmmTMB(Depth ~ Arrow + (1|Target), dispformula = ~ Arrow, data = TCSA_order)
+Anova(arrow_model, type ="III")
+```
+
+### 1.4 Re-evaluating the improved model
+
+We used the procedures recommended for glmmTMB() objects in the *DHARMa* package manual [@DHARMa] to assess our model, `arrow_model`. The QQ plot shows normally distributed residuals, an observation supported by a Kolmogorov-Smirnov Test (p = .711). The Levene's Test on group variances was also insignificant.
+
+```{r improvedplot, fig.width=10, fig.height=6, fig.align="center", echo=TRUE, message=FALSE}
+library(DHARMa)
+sim_residuals <- simulateResiduals(fittedModel = arrow_model, plot = TRUE)
+```
+
+The diagnostic plots produced by *performance* [@performance] also indicated that our new `arrow_model` had resolved the issues of the first model (`block_model`). Homogeniety of variance and the posterior predictive check are significantly improved, the random effects of target are normally distributed, and there is a linear relationship between the independent variables and outcome (depth).
+
+```{r performance, fig.width=10, fig.height=10, fig.align="center",  echo=TRUE, message=FALSE}
+check_model(arrow_model)
+```
+
+### 1.5 Improvement over null model
+
+We built a null model, consisting of only an intercept and the random effect of `Target`, against which to evaluate the fit of our model. We also conducted a simulated Likelihood Ratio Test comparing the null model to `arrow_model`. Both the AIC (432.2 for the null model vs. 407.06 for the arrow model) and the simulated LRT (p \< .001) indicate that the model including arrow as a fixed effect is a better fit than the null model that does not include arrow type.
+
+```{r null model, echo=TRUE, message=FALSE}
+null_arrow <-  glmmTMB(Depth ~ 1 + (1|Target), dispformula = ~ Arrow, data = TCSA_order)
+anova(arrow_model, null_arrow, test="Chisq")
+simulateLRT(null_arrow, arrow_model)
+```
+
+### 1.6 Pairwise comparisons
+
+Having established that our model including arrow type provided a better fit than the null model, we then completed pairwise comparisons between the different arrow types using the estimated marginal means (EMM) for each arrow type, or mean penetration depths corrected for the model specifications - in this case, the random effect of target, and differences in residual variance [@emmeans]. P-values were adjusted using Tukey's method. We also calculated confidence intervals for differences in EMMs. The medium arrow had the greatest EMM of 28.8 cm. The differences in mean penetration depth are significant when comparing the medium vs. small arrow (p \<.001) and the medium vs. large arrow (p = .004). The difference in mean penetration depth of the large vs. small arrow is not statistically significant.
+
+```{r pairwise, echo=TRUE, message=FALSE}
+library(emmeans)
+emmeans_arrow <- emmeans(arrow_model, pairwise ~ Arrow)
+emmeans_arrow
+confint(pairs(emmeans_arrow))
+```
+
+## 2. Accounting for the effects of shot order
+
+For additional confirmation of our results, we fitted another LMM using `Target` as a random effect and shot order (scaled by target to account for differences in the number of shots) and `Arrow` as variables with fixed effects. Like our `arrow_model`, this tests for differences between means in penetration depth while blocking the effects of `Target`, but also allows to evaluate whether shot order had an independent effect on penetration. We fitted the model using the complete dataset (n = 73). `Shot_order` was not a significant term in the model, and when we compared this model against the `arrow_model`, there was insufficient evidence to conclude that keeping `Shot_order` improved fit. Both the ANOVA and the simulated LRT comparing the two models were insignificant.
+
+```{r anova3, echo=TRUE, message=FALSE}
+TCSA_order <- TCSA_order %>%
+group_by(Target) %>%
+mutate(Shot_order= as.numeric(scale(Shot))) %>%
+ungroup()
+shot_model <- glmmTMB(Depth ~ Arrow + Shot_order + (1|Target), dispformula = ~ Arrow, data = TCSA_order)
+Anova(shot_model, type = "III")
+anova(arrow_model, shot_model)
+simulateLRT(arrow_model,shot_model)
+```
+
+## 3. Robust model
+
+### 3.1 Elimination of problematic shots
+
+To evaluate the robusticity of our conclusions, we eliminated shots that were deemed potentially problematic. These either shared entry wounds with other shots, or entered very close to other entry wounds. This decreased the total sample size from 73 to 66 shots.
+
+```{r problem, echo=TRUE}
+TCSA_clean <- TCSA_order %>%
+  filter(Problem=="FALSE")
+summary(TCSA_clean)
+```
+
+### 3.2 LMM using robust data
+
+We fitted an LMM using this smaller dataset. Arrow remains significant in the model.
+
+```{r anova2, echo=TRUE, message=FALSE}
+robust_model <- glmmTMB(Depth ~ Arrow + (1|Target), dispformula = ~ Arrow, data = TCSA_clean)
+Anova(robust_model, type = "III")
+```
+
+### 3.3 Evaluation of robust model
+
+We evaluated the robust model using the same procedures. The robust model fulfilled all LMM assumptions, including homogeneity and normality of residual variance, and was also an improvement over a null model as indicated by a simulated LRT (p \< .001) and a lower AIC value (340.86 vs. 372.45).
+
+```{r improvedplot2, fig.width=10, fig.height=6, fig.align="center", echo=TRUE, message=FALSE}
+library(DHARMa)
+robust_residuals <- simulateResiduals(fittedModel = robust_model, plot = TRUE)
+```
+```{r performance2, fig.width=10, fig.height=10, fig.align="center", echo=TRUE, message=FALSE}
+check_model(robust_model)
+```
+```{r nullrobust, echo=TRUE, message=FALSE}
+null_robust <-  glmmTMB(Depth ~ 1 + (1|Target), dispformula = ~ Arrow, data = TCSA_clean)
+anova(robust_model, null_robust)
+simulateLRT(null_robust, robust_model)
+```
+
+### 3.4 Pairwise comparisons for robust model
+
+When we performed pairwise comparisons on the robust model, we obtained nearly identical results to our model on the full dataset. The medium arrow (emmean = 29.1 cm) penetrated more deeply than the large (p \<.001) and small (p \< .001) arrows.
+
+```{r pairwise2, echo=TRUE, message=FALSE}
+emmeans(robust_model, pairwise ~ Arrow)
+```
+
+
