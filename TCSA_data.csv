@@ -1,0 +1,86 @@
+"","Target","Arrow","Depth","Shot","Comments","Problem"
+"1",1,"Small",23.1,1,"very small chip off one corner",FALSE
+"2",1,"Small",21.8,2,"entry very close to shot 1, exit clearly separate",TRUE
+"3",1,"Small",26.3,3,NA,FALSE
+"4",1,"Small",23.8,4,NA,FALSE
+"5",1,"Small",23.9,5,NA,FALSE
+"6",1,"Small",33.2,6,"entry very close to shot 5",TRUE
+"7",1,"Small",22.6,7,"aimed lower on the block",FALSE
+"8",1,"Small",NA,8,"Hit the box that is put behind the target to stabilise it. Small chip of the edge",TRUE
+"9",1,"Small",22.3,9,NA,FALSE
+"10",1,"Small",20.4,10,NA,FALSE
+"11",1,"Small",20.7,11,NA,FALSE
+"12",1,"Medium",NA,12,"Hit box, hit previous wound",TRUE
+"13",1,"Medium",35.2,13,NA,FALSE
+"14",1,"Medium",31.4,14,NA,FALSE
+"15",1,"Medium",31.7,15,NA,FALSE
+"16",1,"Medium",27.4,16,NA,FALSE
+"17",1,"Medium",25.9,17,"Entered close to a previous shot with small arrow.",TRUE
+"18",1,"Medium",28.7,18,NA,FALSE
+"19",1,"Medium",33.7,19,NA,FALSE
+"20",1,"Medium",33.2,20,"hit another entry wound",TRUE
+"21",1,"Medium",NA,21,"hit the cardboard box so no data",TRUE
+"22",1,"Medium",19.5,22,"Hit another entry wound",TRUE
+"23",1,"Medium",26.4,23,NA,FALSE
+"24",1,"Medium",28.1,24,NA,FALSE
+"25",1,"Medium",22.9,25,NA,FALSE
+"26",2,"Large",22.8,1,"Hit the block in the middle",FALSE
+"27",2,"Medium",24,2,NA,FALSE
+"28",2,"Large",20.2,3,NA,FALSE
+"29",2,"Medium",NA,4,"Same hole as shot 3",TRUE
+"30",2,"Medium",23.9,5,NA,FALSE
+"31",2,"Large",23.1,6,NA,FALSE
+"32",2,"Medium",23.4,7,NA,FALSE
+"33",2,"Large",NA,8,NA,FALSE
+"34",2,"Large",18.9,9,NA,FALSE
+"35",2,"Medium",23.6,10,NA,FALSE
+"36",2,"Large",NA,11,"Missed target completely, hit cardboard box",TRUE
+"37",2,"Large",28.1,12,NA,FALSE
+"38",2,"Medium",NA,13,"Hit cardboard box behind target, no good measurements.",TRUE
+"39",2,"Medium",27.1,14,"Close to the target edge, exit wound led to crack through the side",TRUE
+"40",2,"Large",21.8,15,NA,FALSE
+"41",2,"Medium",30.2,16,NA,FALSE
+"42",2,"Large",22.7,17,NA,FALSE
+"43",2,"Medium",32.6,18,NA,FALSE
+"44",2,"Large",27.4,19,NA,FALSE
+"45",2,"Medium",20.5,20,NA,FALSE
+"46",3,"Small",27.4,1,NA,FALSE
+"47",3,"Medium",40.1,2,NA,FALSE
+"48",3,"Small",NA,3,"Hit cardboard box behind target, no good measurements.",TRUE
+"49",3,"Small",24.5,4,NA,FALSE
+"50",3,"Medium",30.4,5,NA,FALSE
+"51",3,"Small",24.8,6,NA,FALSE
+"52",3,"Medium",31.2,7,NA,FALSE
+"53",3,"Small",25.8,8,NA,FALSE
+"54",3,"Medium",32.6,9,"Connected wounds on both sides, but channel separate",FALSE
+"55",3,"Small",24.2,10,NA,FALSE
+"56",3,"Medium",29.1,11,NA,FALSE
+"57",3,"Small",24.8,12,NA,FALSE
+"58",3,"Medium",23.2,13,NA,FALSE
+"59",3,"Small",24.3,14,NA,FALSE
+"60",3,"Medium",33.2,15,NA,FALSE
+"61",3,"Small",25.4,16,NA,FALSE
+"62",3,"Medium",32.7,17,NA,FALSE
+"63",4,"Small",22.6,1,NA,FALSE
+"64",4,"Large",30.6,2,"Went out through pre-existing crack",TRUE
+"65",4,"Large",24.9,3,NA,FALSE
+"66",4,"Small",18.9,4,NA,FALSE
+"67",4,"Large",18.1,5,NA,FALSE
+"68",4,"Small",20.1,6,NA,FALSE
+"69",4,"Large",23.7,7,NA,FALSE
+"70",4,"Small",23.1,8,NA,FALSE
+"71",4,"Large",22.6,9,NA,FALSE
+"72",4,"Small",20.2,10,NA,FALSE
+"73",4,"Large",22.4,11,NA,FALSE
+"74",4,"Small",NA,12,"Hit cardboard box behind the target",TRUE
+"75",4,"Small",20.7,13,NA,FALSE
+"76",4,"Large",NA,14,"Went through pre-existing shot",TRUE
+"77",4,"Large",24.3,15,NA,FALSE
+"78",4,"Medium",32.1,16,NA,FALSE
+"79",4,"Medium",29.8,17,NA,FALSE
+"80",4,"Medium",27.8,18,NA,FALSE
+"81",4,"Medium",32.7,19,NA,FALSE
+"82",4,"Medium",29.9,20,NA,FALSE
+"83",4,"Medium",NA,21,"Hit cardboard box behind the target",TRUE
+"84",4,"Medium",NA,22,"Hit cardboard box behind the target",TRUE
+"85",4,"Medium",29.2,23,NA,FALSE
